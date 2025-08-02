@@ -1,12 +1,11 @@
-import os
-from openai import OpenAI
 import streamlit as st
-api_key = st.secrets["OPENROUTER_API_KEY"]
+from openai import OpenAI
 
+api_key = st.secrets["OPENROUTER_API_KEY"]
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY")
+    api_key=api_key  # ✅ Use the Streamlit secret here
 )
 
 def llm_extract_answer(context, question, model="mistralai/mixtral-8x7b-instruct", temperature=0.5):
