@@ -1,10 +1,8 @@
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
+import streamlit as st
+api_key = st.secrets["OPENROUTER_API_KEY"]
 
-# Force load .env from root of the project
-dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-load_dotenv(dotenv_path=dotenv_path)
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
