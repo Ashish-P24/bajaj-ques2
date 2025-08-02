@@ -2,45 +2,40 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 
-load_dotenv()
+# Force load .env from root of the project
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(dotenv_path=dotenv_path)
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENROUTER_API_KEY")
 )
 
-def llm_extract_answer(
-    context: str,
-    question: str,
-    temperature: float = 0.5,
-) -> str:
-    prompt = f"""Based on the following document context, answer the user's question.
+def llm_extract_answer(context, question, model="mistralai/mixtral-8x7b-instruct", temperature=0.5):
+    prompt = f"""
+You are a helpful assistant. Read the context and answer the question clearly and thoroughly.
 
-Document Context:
+Context:
 \"\"\"{context}\"\"\"
 
-User Question:
+Question:
 {question}
 
-Instructions for your answer:
-- **Be Concise and Direct:** Provide a clear, direct answer to the question, avoiding unnecessary preamble or conversational filler.
-- **Extract and Synthesize:** Focus on extracting relevant information directly from the provided context. If multiple pieces of information are relevant, synthesize them into a coherent response.
-- **Maintain Neutral Tone:** Present information factually and objectively.
-- **Handle Missing Information Gracefully:** If the answer is not explicitly available in the provided context, state clearly and politely that the information could not be found in the document. Do not invent or hallucinate information.
-- **Format for Readability:** Use clear paragraphs. If listing items, use bullet points or numbered lists for clarity.
-- **Completeness:** Ensure the answer fully addresses all parts of the question based on the available context.
+Guidelines:
+- Write a well-structured, detailed answer in clear form.
+- Do not start with "Answer:" or repeat the question.
+- If information is missing, respond with: "Not found in the document."
 
-Answer:"""
-
+Answer:
+"""
     try:
         response = client.chat.completions.create(
-            model="mistralai/mixtral-8x7b-instruct", # This model is generally good for instruction following
+            model=model,
             messages=[
-                {"role": "system", "content": "You are a highly intelligent and accurate document analysis assistant. Your primary goal is to provide precise answers based *only* on the given document context. You prioritize factual accuracy and clarity."},
+                {"role": "system", "content": "You are a highly capable document assistant."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=temperature,
-            # max_tokens=250 # Uncomment and adjust if you want to limit answer length
+            temperature=temperature
         )
         return response.choices[0].message.content.strip()
     except Exception as e:

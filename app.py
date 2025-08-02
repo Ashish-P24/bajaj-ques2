@@ -4,6 +4,7 @@ from modules.extractor import extract_text_from_file
 from modules.embedder import get_faiss_index, get_top_chunks
 from modules.llm import llm_extract_answer # Ensure this is correct, previously was query_parser.py
 
+
 # App setup
 st.set_page_config(page_title="DocuQuery", layout="wide")
 
