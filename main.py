@@ -1,13 +1,12 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from modules.extractor import extract_text_from_file
-from modules.embedder import get_faiss_index, get_top_chunks
-from modules.llm import llm_extract_answer
 import requests
 import tempfile
 import os
 from dotenv import load_dotenv
+
+print("🚀 FastAPI app is starting...")
 
 load_dotenv()
 
@@ -25,7 +24,7 @@ app.add_middleware(
 @app.post("/hackrx/run")
 async def hackrx_run(request: Request):
     try:
-        # --- Check Bearer Token ---
+        # --- Auth Check ---
         auth = request.headers.get("Authorization")
         if not auth or not auth.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
@@ -33,28 +32,25 @@ async def hackrx_run(request: Request):
         if token != API_KEY:
             raise HTTPException(status_code=403, detail="Unauthorized")
 
-        # --- Parse JSON Body ---
+        # --- Parse Body ---
         body = await request.json()
         document_url = body.get("documents")
         questions = body.get("questions", [])
-
         if not document_url or not questions:
             raise HTTPException(status_code=400, detail="Missing 'documents' or 'questions'")
 
-        # --- Download the File ---
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        # --- Download File ---
+        headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(document_url, headers=headers)
-
         if response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to download document from URL")
+            raise HTTPException(status_code=400, detail="Failed to download document")
 
-        # --- Save to temp file ---
+        # --- Save Temp File ---
         with tempfile.NamedTemporaryFile(delete=False, suffix=document_url.split('.')[-1]) as tmp:
             tmp.write(response.content)
             tmp.flush()
             tmp_file_path = tmp.name
 
-        # --- Create mock UploadFile interface ---
         class DummyUploadFile:
             def __init__(self, file_path, filename):
                 self.filename = filename
@@ -63,10 +59,13 @@ async def hackrx_run(request: Request):
         filename = document_url.split("/")[-1]
         file = DummyUploadFile(tmp_file_path, filename)
 
-        # --- Extract text ---
-        text = extract_text_from_file(file)
+        # --- Lazy Import Heavy Modules ---
+        from modules.extractor import extract_text_from_file
+        from modules.embedder import get_faiss_index, get_top_chunks
+        from modules.llm import llm_extract_answer
 
-        # --- Embed & Search ---
+        # --- Process ---
+        text = extract_text_from_file(file)
         index_data = get_faiss_index(text)
 
         answers = []
