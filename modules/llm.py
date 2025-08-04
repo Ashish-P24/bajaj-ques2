@@ -1,16 +1,19 @@
-import streamlit as st
+import os
+from dotenv import load_dotenv
 from openai import OpenAI
 
-api_key = st.secrets["OPENROUTER_API_KEY"]
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=api_key  # ✅ Use the Streamlit secret here
+    api_key=api_key
 )
 
-def llm_extract_answer(context, question, model="mistralai/mixtral-8x7b-instruct", temperature=0.5):
+def llm_extract_answer(context, question, model="mistralai/mixtral-8x7b-instruct", temperature=0.2):
     prompt = f"""
-You are a helpful assistant. Read the context and answer the question clearly and thoroughly.
+You are a helpful assistant. Read the context and answer the question clearly and concisely.
 
 Context:
 \"\"\"{context}\"\"\"
@@ -19,12 +22,14 @@ Question:
 {question}
 
 Guidelines:
-- Write a well-structured, detailed answer in clear form.
+- Write a short, factual, and concise answer.
 - Do not start with "Answer:" or repeat the question.
-- If information is missing, respond with: "Not found in the document."
+- If information is missing, respond with: "Not found in the document.
+- Please keep calm and do not hallucinate."
 
 Answer:
 """
+
     try:
         response = client.chat.completions.create(
             model=model,
@@ -37,3 +42,5 @@ Answer:
         return response.choices[0].message.content.strip()
     except Exception as e:
         return f"❌ Error: {e}"
+    print("Loaded OpenRouter Key:", api_key)
+

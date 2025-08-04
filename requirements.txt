@@ -1,9 +1,12 @@
-streamlit
+fastapi
+uvicorn
 openai
 python-dotenv
-pdfplumber
-python-docx
+fpdf
 faiss-cpu
 sentence-transformers
-fpdf
+pdfplumber
+python-docx
+pandas
 PyMuPDF
+requests
