@@ -1,7 +1,9 @@
 fastapi
 uvicorn[standard]
 gunicorn
+requests
+python-dotenv
 sentence-transformers
 faiss-cpu
-python-dotenv
 PyMuPDF
+openai
